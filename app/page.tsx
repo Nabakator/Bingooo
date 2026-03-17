@@ -147,6 +147,9 @@ export default function HomePage() {
   const calledNumbers = roomState?.calledNumbers ?? [];
   const latestCalledNumber = calledNumbers.at(-1) ?? null;
   const recentCalledNumbers = calledNumbers.slice(-8).reverse();
+  const latestCalledLabel =
+    latestCalledNumber === null ? null : getNumberLabel(latestCalledNumber);
+  const previousCalledNumbers = recentCalledNumbers.slice(1);
   const calledSet = new Set(calledNumbers);
   const isConnected = socketId !== null;
   const isHost = Boolean(isConnected && roomState && roomState.hostSocketId === socketId);
@@ -205,26 +208,53 @@ export default function HomePage() {
                 <p className={styles.panelEyebrow}>Top calls</p>
                 <h2 className={styles.panelTitle}>Number balls</h2>
               </div>
-              <div className={styles.latestCallBadge}>
-                Latest: {latestCalledNumber ?? "-"}
+              <div
+                className={`${styles.latestCallBadge} ${
+                  latestCalledLabel ? BALL_CLASS_BY_LABEL[latestCalledLabel] : ""
+                }`}
+              >
+                <span className={styles.latestBadgeTitle}>Latest</span>
+                <span className={styles.latestBadgeValue}>
+                  {latestCalledLabel && latestCalledNumber !== null
+                    ? `${latestCalledLabel}${latestCalledNumber}`
+                    : "--"}
+                </span>
               </div>
             </div>
-            <div className={styles.ballRow}>
-              {recentCalledNumbers.length > 0 ? (
-                recentCalledNumbers.map((value, index) => {
-                  const label = getNumberLabel(value);
-                  return (
+            <div className={styles.callRail}>
+              {latestCalledNumber !== null && latestCalledLabel ? (
+                <>
+                  <div className={styles.callHero}>
                     <div
-                      key={`${value}-${index}`}
-                      className={`${styles.numberBall} ${BALL_CLASS_BY_LABEL[label]} ${
-                        index === 0 ? styles.latestBall : ""
+                      className={`${styles.numberBall} ${styles.latestBall} ${
+                        BALL_CLASS_BY_LABEL[latestCalledLabel]
                       }`}
                     >
-                      <span className={styles.ballLetter}>{label}</span>
-                      <span className={styles.ballValue}>{value}</span>
+                      <div className={styles.ballFace}>
+                        <span className={styles.ballLetter}>{latestCalledLabel}</span>
+                        <span className={styles.ballValue}>{latestCalledNumber}</span>
+                      </div>
                     </div>
-                  );
-                })
+                  </div>
+                  <div className={styles.ballRow}>
+                    {previousCalledNumbers.map((value, index) => {
+                      const label = getNumberLabel(value);
+                      return (
+                        <div
+                          key={`${value}-${index}`}
+                          className={`${styles.numberBall} ${styles.historyBall} ${
+                            BALL_CLASS_BY_LABEL[label]
+                          }`}
+                        >
+                          <div className={styles.ballFace}>
+                            <span className={styles.ballLetter}>{label}</span>
+                            <span className={styles.ballValue}>{value}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               ) : (
                 <div className={styles.emptyBalls}>No numbers called yet</div>
               )}
