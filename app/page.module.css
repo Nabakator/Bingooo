@@ -229,13 +229,13 @@
 }
 
 .ballLetter {
-  font-size: 0.72rem;
+  font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: 0.18em;
 }
 
 .ballValue {
-  margin-top: -2px;
+  margin-top: -24px;
   font-size: 1.45rem;
   font-weight: 800;
   line-height: 1;
@@ -374,9 +374,12 @@
 }
 
 .cardFrame {
-  margin-top: 18px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 18px auto 0;
   padding: 16px;
   border-radius: 28px;
+  overflow-x: auto;
   background:
     linear-gradient(180deg, #2c6fd2 0%, #1c59b7 100%);
   box-shadow:
@@ -385,18 +388,20 @@
 }
 
 .card {
-  width: 100%;
+  --tile-size: clamp(44px, 7vw, 86px);
+  width: fit-content;
+  margin: 0 auto;
   border-collapse: separate;
   border-spacing: 8px;
-  table-layout: fixed;
 }
 
 .cardHeader,
 .cell,
 .marked,
 .free {
-  width: 20%;
-  height: clamp(58px, 9vw, 86px);
+  width: var(--tile-size);
+  min-width: var(--tile-size);
+  height: var(--tile-size);
   text-align: center;
   border-radius: 18px;
   font-weight: 800;
@@ -451,13 +456,13 @@
 }
 
 .free {
-  background: linear-gradient(180deg, #ff86c1 0%, #d84088 100%);
-  color: #fff;
+  background: linear-gradient(180deg, #ffe074 0%, #ffb11c 100%);
+  color: #5c2d00;
   letter-spacing: 0.12em;
-  font-size: clamp(0.82rem, 1.6vw, 1rem);
+  font-size: clamp(1.8rem, 3.2vw, 2.4rem);
   box-shadow:
-    inset 0 -6px 0 rgb(146 22 81 / 0.35),
-    0 10px 20px rgb(214 64 136 / 0.26);
+    inset 0 -6px 0 rgb(225 136 16 / 0.45),
+    0 10px 20px rgb(232 164 44 / 0.22);
 }
 
 .boardFooter {
@@ -632,6 +637,7 @@
   }
 
   .card {
+    --tile-size: 48px;
     border-spacing: 6px;
   }
 
@@ -639,7 +645,6 @@
   .cell,
   .marked,
   .free {
-    height: 58px;
     border-radius: 14px;
   }
 }

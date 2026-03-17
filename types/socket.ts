@@ -1,6 +1,9 @@
 import type { BingoPattern, Card } from "../lib/bingo";
 
-export type GameStatus = "waiting" | "running" | "finished";
+export type GameStatus = "WAITING" | "RUNNING" | "FINISHED";
+export type SocketAuth = {
+  sessionId: string;
+};
 
 export type Player = {
   playerId: string;
@@ -21,6 +24,8 @@ export type RoomState = {
 
 export type ServerReadyPayload = {
   socketId: string;
+  roomId: string | null;
+  resumed: boolean;
 };
 
 export type CreateRoomPayload = {

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Bingooo",
-  description: "Real-time multiplayer bingo app skeleton",
+  description: "Real-time multiplayer BINGO app skeleton",
 };
 
 type RootLayoutProps = {

@@ -41,34 +41,51 @@ function getNumberLabel(value: number): CardLabel {
 }
 
 export default function HomePage() {
-  const [status, setStatus] = useState("disconnected");
+  const [status, setStatus] = useState("DISCONNECTED");
   const [socketId, setSocketId] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState("Player");
   const [roomIdInput, setRoomIdInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [roomState, setRoomState] = useState<RoomState | null>(null);
   const [bingoResult, setBingoResult] = useState<BingoResultPayload | null>(null);
+  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
     const socket = getSocket();
 
     const onConnect = () => {
-      setStatus("connected");
+      setStatus("CONNECTED");
       setSocketId(socket.id ?? null);
       setError(null);
     };
     const onDisconnect = (reason: string) => {
-      setStatus(`disconnected (${reason})`);
+      const isTransientDisconnect = reason !== "io client disconnect";
+
+      setStatus(
+        isTransientDisconnect ? `RECONNECTING (${reason})` : `DISCONNECTED (${reason})`,
+      );
       setSocketId(null);
+      if (isTransientDisconnect) {
+        setError("Connection lost. Trying to reconnect...");
+        return;
+      }
+
       setRoomState(null);
       setBingoResult(null);
+      setCurrentPlayerId(null);
     };
     const onConnectError = (connectError: Error) => {
-      setStatus("connection error");
+      setStatus("RECONNECT FAILED");
       setError(connectError.message);
     };
-    const onServerReady = ({ socketId: readySocketId }: ServerReadyPayload) => {
+    const onServerReady = ({ socketId: readySocketId, roomId, resumed }: ServerReadyPayload) => {
       setSocketId(readySocketId);
+      setStatus(resumed ? "RECONNECTED" : "CONNECTED");
+      if (roomId !== null) return;
+
+      setRoomState(null);
+      setBingoResult(null);
+      setCurrentPlayerId(null);
     };
     const onRoomCreated = ({ roomId }: RoomCreatedPayload) => {
       setRoomIdInput(roomId);
@@ -79,7 +96,13 @@ export default function HomePage() {
       setRoomState(nextRoomState);
       setRoomIdInput(nextRoomState.roomId);
       setError(null);
-      if (nextRoomState.gameStatus !== "finished" && nextRoomState.calledNumbers.length === 0) {
+      setCurrentPlayerId((previousPlayerId) => {
+        const nextPlayer =
+          nextRoomState.players.find((player) => player.socketId === socket.id) ??
+          nextRoomState.players.find((player) => player.playerId === previousPlayerId);
+        return nextPlayer?.playerId ?? null;
+      });
+      if (nextRoomState.gameStatus !== "FINISHED" && nextRoomState.calledNumbers.length === 0) {
         setBingoResult(null);
       }
     };
@@ -115,17 +138,22 @@ export default function HomePage() {
   }, []);
 
   const currentPlayer =
-    roomState?.players.find((player) => player.socketId === socketId) ?? null;
+    roomState?.players.find(
+      (player) => player.socketId === socketId || player.playerId === currentPlayerId,
+    ) ?? null;
   const winner =
     roomState?.players.find((player) => player.playerId === roomState.winnerPlayerId) ?? null;
-  const winnerLabel = winner?.name ?? roomState?.winnerPlayerId ?? "None";
+  const winnerLabel = winner?.name ?? roomState?.winnerPlayerId ?? "NONE";
   const calledNumbers = roomState?.calledNumbers ?? [];
   const latestCalledNumber = calledNumbers.at(-1) ?? null;
   const recentCalledNumbers = calledNumbers.slice(-8).reverse();
   const calledSet = new Set(calledNumbers);
-  const isHost = Boolean(roomState && roomState.hostSocketId === socketId);
-  const canStartGame = Boolean(isHost && roomState?.gameStatus === "waiting");
-  const canClaimBingo = Boolean(currentPlayer && roomState?.gameStatus === "running");
+  const isConnected = socketId !== null;
+  const isHost = Boolean(isConnected && roomState && roomState.hostSocketId === socketId);
+  const canStartGame = Boolean(isHost && roomState?.gameStatus !== "RUNNING");
+  const canClaimBingo = Boolean(
+    isConnected && currentPlayer && roomState?.gameStatus === "RUNNING",
+  );
   const bannerText = bingoResult?.message ?? error ?? "Waiting for players.";
 
   const createRoom = () => {
@@ -162,20 +190,20 @@ export default function HomePage() {
       <div className={styles.shell}>
         <header className={styles.topBar}>
           <div className={styles.brandBlock}>
-            <p className={styles.brandKicker}>Casual Multiplayer Bingo</p>
-            <h1 className={styles.title}>Bingooo</h1>
+            <p className={styles.brandKicker}>Casual multiplayer BINGO</p>
+            <h1 className={styles.title}>BINGOOO</h1>
             <div className={styles.metaRow}>
               <span className={styles.metaPill}>Status: {status}</span>
               <span className={styles.metaPill}>Room: {roomState?.roomId ?? "Lobby"}</span>
-              <span className={styles.metaPill}>Game: {roomState?.gameStatus ?? "idle"}</span>
+              <span className={styles.metaPill}>Game: {roomState?.gameStatus ?? "IDLE"}</span>
             </div>
           </div>
 
           <section className={styles.calledDeck} aria-label="Latest called numbers">
             <div className={styles.calledHeader}>
               <div>
-                <p className={styles.panelEyebrow}>Top Calls</p>
-                <h2 className={styles.panelTitle}>Number Balls</h2>
+                <p className={styles.panelEyebrow}>Top calls</p>
+                <h2 className={styles.panelTitle}>Number balls</h2>
               </div>
               <div className={styles.latestCallBadge}>
                 Latest: {latestCalledNumber ?? "-"}
@@ -206,19 +234,19 @@ export default function HomePage() {
 
         <section className={styles.statusBanner}>
           <div>
-            <p className={styles.panelEyebrow}>Match Banner</p>
+            <p className={styles.panelEyebrow}>Match banner</p>
             <h2 className={styles.bannerTitle}>{bannerText}</h2>
           </div>
           <div className={styles.bannerMeta}>
             <span>Winner: {winnerLabel}</span>
-            <span>Socket: {socketId ?? "Not connected"}</span>
+            <span>Socket: {socketId ?? "NOT CONNECTED"}</span>
           </div>
         </section>
 
         <div className={styles.gameLayout}>
           <aside className={styles.playersRail}>
             <div className={styles.railHeader}>
-              <p className={styles.panelEyebrow}>Room Roster</p>
+              <p className={styles.panelEyebrow}>Room roster</p>
               <h2 className={styles.panelTitle}>Players</h2>
             </div>
             {roomState ? (
@@ -256,15 +284,15 @@ export default function HomePage() {
             <div className={styles.boardShell}>
               <div className={styles.boardHeader}>
                 <div>
-                  <p className={styles.panelEyebrow}>Your Board</p>
+                  <p className={styles.panelEyebrow}>Your board</p>
                   <h2 className={styles.panelTitle}>
-                    {currentPlayer ? `${currentPlayer.name}'s Card` : "Waiting for Card"}
+                    {currentPlayer ? `${currentPlayer.name}'s card` : "Waiting for a card"}
                   </h2>
                 </div>
                 <div className={styles.boardStats}>
                   <span className={styles.statChip}>Calls: {calledNumbers.length}</span>
                   <span className={styles.statChip}>
-                    Draw Speed: {roomState?.drawIntervalMs ?? 0}ms
+                    Draw speed: {roomState?.drawIntervalMs ?? 0}ms
                   </span>
                 </div>
               </div>
@@ -299,7 +327,7 @@ export default function HomePage() {
                                     : styles.cell
                               }
                             >
-                              {value === FREE_SPACE ? "FREE" : value}
+                              {value === FREE_SPACE ? "★" : value}
                             </td>
                           ))}
                         </tr>
@@ -321,7 +349,7 @@ export default function HomePage() {
                   disabled={!canClaimBingo}
                   onClick={claimBingo}
                 >
-                  Bingo
+                  BINGO
                 </button>
                 <p className={styles.boardHint}>
                   The free centre stays marked. Number tiles light up automatically as calls arrive.
@@ -333,11 +361,11 @@ export default function HomePage() {
           <aside className={styles.controlDock}>
             <section className={styles.controlCard}>
               <div className={styles.railHeader}>
-                <p className={styles.panelEyebrow}>Room Actions</p>
+                <p className={styles.panelEyebrow}>Room actions</p>
                 <h2 className={styles.panelTitle}>Controls</h2>
               </div>
               <label className={styles.field}>
-                <span>Player Name</span>
+                <span>Player name</span>
                 <input
                   value={playerName}
                   onChange={(event) => setPlayerName(event.target.value)}
@@ -347,15 +375,15 @@ export default function HomePage() {
                 <span>Room ID</span>
                 <input
                   value={roomIdInput}
-                  onChange={(event) => setRoomIdInput(event.target.value.toUpperCase())}
+                  onChange={(event) => setRoomIdInput(event.target.value)}
                 />
               </label>
               <div className={styles.actionStack}>
                 <button className={styles.primaryButton} type="button" onClick={createRoom}>
-                  Create Room
+                  Create room
                 </button>
                 <button className={styles.secondaryButton} type="button" onClick={joinRoom}>
-                  Join Room
+                  Join room
                 </button>
                 <button
                   className={styles.startButton}
@@ -363,27 +391,27 @@ export default function HomePage() {
                   disabled={!canStartGame}
                   onClick={startGame}
                 >
-                  Start Game
+                  Start game
                 </button>
               </div>
             </section>
 
             <section className={styles.controlCard}>
               <div className={styles.railHeader}>
-                <p className={styles.panelEyebrow}>Game Feed</p>
+                <p className={styles.panelEyebrow}>Game feed</p>
                 <h2 className={styles.panelTitle}>Status</h2>
               </div>
               <div className={styles.feedRow}>
-                <span className={styles.feedLabel}>Claim</span>
-                <span>{bingoResult?.pattern ?? "None"}</span>
+                <span className={styles.feedLabel}>BINGO</span>
+                <span>{bingoResult?.pattern ?? "NONE"}</span>
               </div>
               <div className={styles.feedRow}>
                 <span className={styles.feedLabel}>Result</span>
-                <span>{bingoResult?.message ?? "No bingo claims yet."}</span>
+                <span>{bingoResult?.message ?? "No BINGO claims yet."}</span>
               </div>
               <div className={styles.feedRow}>
                 <span className={styles.feedLabel}>Error</span>
-                <span>{error ?? "None"}</span>
+                <span>{error ?? "NONE"}</span>
               </div>
             </section>
           </aside>

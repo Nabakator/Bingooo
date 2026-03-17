@@ -1,7 +1,7 @@
 export const FREE_SPACE = "FREE" as const;
 export type CardCell = number | typeof FREE_SPACE;
 export type Card = CardCell[][];
-export type BingoPattern = "row" | "column" | "diagonal" | "four_corners" | null;
+export type BingoPattern = "ROW" | "COLUMN" | "DIAGONAL" | "FOUR CORNERS" | null;
 export type CheckBingoResult = {
   isBingo: boolean;
   pattern: BingoPattern;
@@ -106,22 +106,22 @@ export function checkBingo(card: Card, calledNumbers: number[]): CheckBingoResul
   const calledSet = new Set(calledNumbers);
 
   if (card.some((row) => hasCompleteLine(row, calledSet))) {
-    return { isBingo: true, pattern: "row" };
+    return { isBingo: true, pattern: "ROW" };
   }
   if (
     Array.from({ length: GRID_SIZE }, (_, index) => getColumn(card, index)).some(
       (column) => hasCompleteLine(column, calledSet),
     )
   ) {
-    return { isBingo: true, pattern: "column" };
+    return { isBingo: true, pattern: "COLUMN" };
   }
   if (getDiagonals(card).some((line) => hasCompleteLine(line, calledSet))) {
-    return { isBingo: true, pattern: "diagonal" };
+    return { isBingo: true, pattern: "DIAGONAL" };
   }
 
   const corners = [card[0][0], card[0][4], card[4][0], card[4][4]];
   if (hasCompleteLine(corners, calledSet)) {
-    return { isBingo: true, pattern: "four_corners" };
+    return { isBingo: true, pattern: "FOUR CORNERS" };
   }
   return { isBingo: false, pattern: null };
 }

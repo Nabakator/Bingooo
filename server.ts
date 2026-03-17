@@ -17,6 +17,7 @@ import type {
   JoinRoomPayload,
   Player,
   RoomState,
+  SocketAuth,
   ServerToClientEvents,
 } from "./types/socket";
 
@@ -24,25 +25,81 @@ const dev = process.env.NODE_ENV !== "production";
 const host = process.env.HOST ?? "0.0.0.0";
 const port = Number(process.env.PORT ?? 3000);
 const parsedIntervalMs = Number(process.env.DRAW_INTERVAL_MS ?? 5000);
+const parsedGraceMs = Number(process.env.DISCONNECT_GRACE_MS ?? 15000);
 const DRAW_INTERVAL_MS = Number.isFinite(parsedIntervalMs) ? parsedIntervalMs : 5000;
+const DISCONNECT_GRACE_MS = Number.isFinite(parsedGraceMs) ? parsedGraceMs : 15000;
+const ROOM_IDS = [
+  "Alfa",
+  "Bravo",
+  "Charlie",
+  "Delta",
+  "Echo",
+  "Foxtrot",
+  "Golf",
+  "Hotel",
+  "India",
+  "Juliett",
+  "Kilo",
+  "Lima",
+  "Mike",
+  "November",
+  "Oscar",
+  "Papa",
+  "Quebec",
+  "Romeo",
+  "Sierra",
+  "Tango",
+  "Uniform",
+  "Victor",
+  "Whiskey",
+  "Xray",
+  "Yankee",
+  "Zulu",
+] as const;
 
 type RoomRecord = {
   state: RoomState;
   remainingNumbers: number[];
   drawTimer: ReturnType<typeof setInterval> | null;
+  pendingRemovalTimers: Map<string, ReturnType<typeof setTimeout>>;
 };
 
 const rooms = new Map<string, RoomRecord>();
 const socketToRoom = new Map<string, string>();
-let roomCount = 0;
+const socketToSession = new Map<string, string>();
+const sessionToPlayer = new Map<string, { roomId: string; playerId: string }>();
 let playerCount = 0;
 
 function nextRoomId() {
-  return (++roomCount).toString(36).toUpperCase().padStart(4, "0");
+  return ROOM_IDS.find((roomId) => !rooms.has(roomId)) ?? null;
 }
 
 function trimName(name: string) {
   return name.trim();
+}
+
+function getSessionId(socket: Socket<ClientToServerEvents, ServerToClientEvents>) {
+  const auth = socket.handshake.auth as Partial<SocketAuth> | undefined;
+  const sessionId = typeof auth?.sessionId === "string" ? auth.sessionId.trim() : "";
+  return sessionId || socket.id;
+}
+
+function canCreateRoom(socketId: string) {
+  const currentRoomId = socketToRoom.get(socketId);
+  if (!currentRoomId) return rooms.size < ROOM_IDS.length;
+
+  const currentRoom = rooms.get(currentRoomId);
+  if (!currentRoom) return rooms.size < ROOM_IDS.length;
+
+  return currentRoom.state.players.length === 1 || rooms.size < ROOM_IDS.length;
+}
+
+function findRoomId(roomId: string) {
+  const normalizedRoomId = roomId.trim().toLowerCase();
+  return ROOM_IDS.find(
+    (candidate) =>
+      candidate.toLowerCase() === normalizedRoomId && rooms.has(candidate),
+  ) ?? null;
 }
 
 function createPlayer(socketId: string, name: string): Player {
@@ -60,6 +117,30 @@ function stopRoomTimer(room: RoomRecord) {
   room.drawTimer = null;
 }
 
+function stopPendingRemoval(room: RoomRecord, playerId: string) {
+  const pendingTimer = room.pendingRemovalTimers.get(playerId);
+  if (!pendingTimer) return;
+
+  clearTimeout(pendingTimer);
+  room.pendingRemovalTimers.delete(playerId);
+}
+
+function stopPendingRemovals(room: RoomRecord) {
+  for (const pendingTimer of room.pendingRemovalTimers.values()) {
+    clearTimeout(pendingTimer);
+  }
+  room.pendingRemovalTimers.clear();
+}
+
+function deleteRoom(roomId: string) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+
+  stopRoomTimer(room);
+  stopPendingRemovals(room);
+  rooms.delete(roomId);
+}
+
 function emitRoomState(
   io: Server<ClientToServerEvents, ServerToClientEvents>,
   roomId: string,
@@ -72,6 +153,40 @@ function getRoomForSocket(socketId: string) {
   const roomId = socketToRoom.get(socketId);
   if (!roomId) return null;
   return { roomId, room: rooms.get(roomId) ?? null };
+}
+
+function getPlayerForSession(sessionId: string) {
+  const location = sessionToPlayer.get(sessionId);
+  if (!location) return null;
+
+  const room = rooms.get(location.roomId);
+  if (!room) {
+    sessionToPlayer.delete(sessionId);
+    return null;
+  }
+
+  const player = room.state.players.find(
+    (candidate) => candidate.playerId === location.playerId,
+  );
+  if (!player) {
+    sessionToPlayer.delete(sessionId);
+    stopPendingRemoval(room, location.playerId);
+    return null;
+  }
+
+  return { roomId: location.roomId, room, player };
+}
+
+function attachSocketToPlayer(
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>,
+  roomId: string,
+  playerId: string,
+  sessionId: string,
+) {
+  socketToRoom.set(socket.id, roomId);
+  socketToSession.set(socket.id, sessionId);
+  sessionToPlayer.set(sessionId, { roomId, playerId });
+  socket.join(roomId);
 }
 
 function emitBingoResult(
@@ -88,12 +203,12 @@ function tickRoom(
   roomId: string,
 ) {
   const room = rooms.get(roomId);
-  if (!room || room.state.gameStatus !== "running") return;
+  if (!room || room.state.gameStatus !== "RUNNING") return;
 
   const nextDraw = drawNextNumber(room.remainingNumbers, room.state.calledNumbers);
 
   if (nextDraw.drawnNumber === null) {
-    room.state.gameStatus = "finished";
+    room.state.gameStatus = "FINISHED";
     stopRoomTimer(room);
     emitRoomState(io, roomId);
     return;
@@ -104,25 +219,28 @@ function tickRoom(
   emitRoomState(io, roomId);
 }
 
-function removeFromRoom(
+function removePlayerFromRoom(
   io: Server<ClientToServerEvents, ServerToClientEvents>,
-  socket: Socket<ClientToServerEvents, ServerToClientEvents>,
-  leaveSocketRoom: boolean,
+  roomId: string,
+  playerId: string,
+  sessionId: string,
 ) {
-  const roomId = socketToRoom.get(socket.id);
-  if (!roomId) return;
-
-  socketToRoom.delete(socket.id);
-  if (leaveSocketRoom) socket.leave(roomId);
-
   const room = rooms.get(roomId);
-  if (!room) return;
+  if (!room) {
+    sessionToPlayer.delete(sessionId);
+    return;
+  }
 
-  room.state.players = room.state.players.filter((player) => player.socketId !== socket.id);
+  stopPendingRemoval(room, playerId);
+  room.state.players = room.state.players.filter((player) => player.playerId !== playerId);
+
+  const currentLocation = sessionToPlayer.get(sessionId);
+  if (currentLocation?.roomId === roomId && currentLocation.playerId === playerId) {
+    sessionToPlayer.delete(sessionId);
+  }
 
   if (room.state.players.length === 0) {
-    stopRoomTimer(room);
-    rooms.delete(roomId);
+    deleteRoom(roomId);
     return;
   }
 
@@ -133,17 +251,93 @@ function removeFromRoom(
   emitRoomState(io, roomId);
 }
 
+function removeFromRoom(
+  io: Server<ClientToServerEvents, ServerToClientEvents>,
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>,
+  leaveSocketRoom: boolean,
+) {
+  const roomId = socketToRoom.get(socket.id);
+  const sessionId = socketToSession.get(socket.id);
+  if (!roomId || !sessionId) return;
+
+  socketToRoom.delete(socket.id);
+  socketToSession.delete(socket.id);
+  if (leaveSocketRoom) socket.leave(roomId);
+
+  const match = getPlayerForSession(sessionId);
+  if (!match || match.roomId !== roomId || match.player.socketId !== socket.id) return;
+
+  removePlayerFromRoom(io, roomId, match.player.playerId, sessionId);
+}
+
+function scheduleDisconnectRemoval(
+  io: Server<ClientToServerEvents, ServerToClientEvents>,
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>,
+) {
+  const roomId = socketToRoom.get(socket.id);
+  const sessionId = socketToSession.get(socket.id);
+  if (!roomId || !sessionId) return;
+
+  socketToRoom.delete(socket.id);
+  socketToSession.delete(socket.id);
+
+  const match = getPlayerForSession(sessionId);
+  if (!match || match.roomId !== roomId || match.player.socketId !== socket.id) return;
+
+  stopPendingRemoval(match.room, match.player.playerId);
+  const removalTimer = setTimeout(() => {
+    removePlayerFromRoom(io, roomId, match.player.playerId, sessionId);
+  }, DISCONNECT_GRACE_MS);
+
+  match.room.pendingRemovalTimers.set(match.player.playerId, removalTimer);
+}
+
+function resumePlayer(
+  io: Server<ClientToServerEvents, ServerToClientEvents>,
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>,
+  sessionId: string,
+) {
+  const match = getPlayerForSession(sessionId);
+  if (!match) return null;
+
+  stopPendingRemoval(match.room, match.player.playerId);
+
+  const previousSocketId = match.player.socketId;
+  match.player.socketId = socket.id;
+  if (match.room.state.hostSocketId === previousSocketId) {
+    match.room.state.hostSocketId = socket.id;
+  }
+
+  attachSocketToPlayer(socket, match.roomId, match.player.playerId, sessionId);
+  emitRoomState(io, match.roomId);
+  if (previousSocketId !== socket.id) {
+    io.sockets.sockets.get(previousSocketId)?.disconnect(true);
+  }
+  return match.roomId;
+}
+
 function createRoom(
   io: Server<ClientToServerEvents, ServerToClientEvents>,
   socket: Socket<ClientToServerEvents, ServerToClientEvents>,
   payload: CreateRoomPayload,
 ) {
   const name = trimName(payload.name);
+  const sessionId = socketToSession.get(socket.id) ?? getSessionId(socket);
   if (!name) return socket.emit("room_error", { message: "Player name is required." });
+  if (!canCreateRoom(socket.id)) {
+    return socket.emit("room_error", {
+      message: "All rooms are currently in use. Please join an existing room.",
+    });
+  }
 
   removeFromRoom(io, socket, true);
 
   const roomId = nextRoomId();
+  if (!roomId) {
+    return socket.emit("room_error", {
+      message: "All rooms are currently in use. Please join an existing room.",
+    });
+  }
   const room: RoomRecord = {
     state: {
       roomId,
@@ -152,15 +346,16 @@ function createRoom(
       calledNumbers: [],
       winnerPlayerId: null,
       drawIntervalMs: DRAW_INTERVAL_MS,
-      gameStatus: "waiting",
+      gameStatus: "WAITING",
     },
     remainingNumbers: [],
     drawTimer: null,
+    pendingRemovalTimers: new Map(),
   };
 
+  const player = room.state.players[0];
   rooms.set(roomId, room);
-  socketToRoom.set(socket.id, roomId);
-  socket.join(roomId);
+  attachSocketToPlayer(socket, roomId, player.playerId, sessionId);
   socket.emit("room_created", { roomId });
   emitRoomState(io, roomId);
 }
@@ -171,23 +366,26 @@ function joinRoom(
   payload: JoinRoomPayload,
 ) {
   const name = trimName(payload.name);
-  const roomId = payload.roomId.trim().toUpperCase();
-  const room = rooms.get(roomId);
+  const sessionId = socketToSession.get(socket.id) ?? getSessionId(socket);
+  const requestedRoomId = payload.roomId.trim();
+  const matchedRoomId = findRoomId(requestedRoomId);
+  const room = matchedRoomId ? rooms.get(matchedRoomId) : null;
   const normalizedName = name.toLowerCase();
 
   if (!name) {
     return socket.emit("room_error", {
       message: "Player name is required.",
-      roomId,
+      roomId: requestedRoomId,
     });
   }
   if (!room) {
     return socket.emit("room_error", {
       message: "Room does not exist.",
-      roomId,
+      roomId: requestedRoomId,
     });
   }
-  if (room.state.gameStatus !== "waiting") {
+  const roomId = room.state.roomId;
+  if (room.state.gameStatus !== "WAITING") {
     return socket.emit("room_error", {
       message: "Cannot join a game that has already started.",
       roomId,
@@ -206,9 +404,9 @@ function joinRoom(
 
   removeFromRoom(io, socket, true);
 
-  room.state.players.push(createPlayer(socket.id, name));
-  socketToRoom.set(socket.id, roomId);
-  socket.join(roomId);
+  const player = createPlayer(socket.id, name);
+  room.state.players.push(player);
+  attachSocketToPlayer(socket, roomId, player.playerId, sessionId);
   emitRoomState(io, roomId);
 }
 
@@ -225,15 +423,17 @@ function startGame(
   if (room.state.hostSocketId !== socket.id) {
     return socket.emit("room_error", { message: "Only the host can start the game." });
   }
-  if (room.state.gameStatus !== "waiting") {
-    return socket.emit("room_error", { message: "Game can only start from waiting state." });
+  if (room.state.gameStatus === "RUNNING") {
+    return socket.emit("room_error", {
+      message: "Game is already running.",
+    });
   }
 
   stopRoomTimer(room);
   room.remainingNumbers = createShuffledNumbers();
   room.state.calledNumbers = [];
   room.state.winnerPlayerId = null;
-  room.state.gameStatus = "running";
+  room.state.gameStatus = "RUNNING";
   emitRoomState(io, roomId);
 
   room.drawTimer = setInterval(() => {
@@ -255,7 +455,7 @@ function claimBingo(
   if (!player) {
     return socket.emit("room_error", { message: "Player was not found in the room." });
   }
-  if (room.state.gameStatus !== "running") {
+  if (room.state.gameStatus !== "RUNNING") {
     return emitBingoResult(socket, {
       isValid: false,
       pattern: null,
@@ -270,19 +470,19 @@ function claimBingo(
       isValid: false,
       pattern: result.pattern,
       winnerPlayerId: room.state.winnerPlayerId,
-      message: "Bingo claim is not valid yet.",
+      message: "BINGO claim is not valid yet.",
     });
   }
 
   room.state.winnerPlayerId = player.playerId;
-  room.state.gameStatus = "finished";
+  room.state.gameStatus = "FINISHED";
   stopRoomTimer(room);
   emitRoomState(io, roomId);
   emitBingoResult(io.to(roomId), {
     isValid: true,
     pattern: result.pattern,
     winnerPlayerId: player.playerId,
-    message: `${player.name} has bingo.`,
+    message: `${player.name} has BINGO!`,
   });
 }
 
@@ -297,15 +497,23 @@ async function startServer() {
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer);
 
   io.on("connection", (socket) => {
+    const sessionId = getSessionId(socket);
+    socketToSession.set(socket.id, sessionId);
+    const resumedRoomId = resumePlayer(io, socket, sessionId);
+
     console.log(`Socket connected: ${socket.id}`);
-    socket.emit("server:ready", { socketId: socket.id });
+    socket.emit("server:ready", {
+      socketId: socket.id,
+      roomId: resumedRoomId,
+      resumed: resumedRoomId !== null,
+    });
     socket.on("create_room", (payload) => createRoom(io, socket, payload));
     socket.on("join_room", (payload) => joinRoom(io, socket, payload));
     socket.on("start_game", () => startGame(io, socket));
     socket.on("claim_bingo", () => claimBingo(io, socket));
     socket.on("disconnect", (reason) => {
       console.log(`Socket disconnected: ${socket.id} (${reason})`);
-      removeFromRoom(io, socket, false);
+      scheduleDisconnectRemoval(io, socket);
     });
   });
 
