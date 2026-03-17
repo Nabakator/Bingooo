@@ -2,6 +2,10 @@
 
 Real-time multiplayer bingo built with Next.js, Express, and Socket.IO.
 
+## Live demo
+
+https://bingooo-2z8k.onrender.com
+
 ## Requirements
 
 - Node.js `>=20.9.0 <23`
