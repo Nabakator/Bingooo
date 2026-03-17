@@ -1,120 +1,645 @@
 .page {
-  max-width: 960px;
-  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
   padding: 24px;
+  background:
+    linear-gradient(180deg, #89d5ff 0%, #bfe7ff 34%, #f9f2d6 100%);
+  color: #21304a;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.skyGlow,
+.sunHalo,
+.cloudOne,
+.cloudTwo,
+.hillBack,
+.hillFront {
+  position: absolute;
+  border-radius: 999px;
+}
+
+.skyGlow {
+  width: 620px;
+  height: 620px;
+  top: -220px;
+  right: -120px;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0) 72%);
+}
+
+.sunHalo {
+  width: 260px;
+  height: 260px;
+  top: 72px;
+  right: 132px;
+  background: radial-gradient(circle, #fff6b7 0%, rgb(255 246 183 / 0) 74%);
+}
+
+.cloudOne {
+  width: 280px;
+  height: 92px;
+  top: 130px;
+  left: 10%;
+  background: rgb(255 255 255 / 0.58);
+  filter: blur(2px);
+}
+
+.cloudTwo {
+  width: 220px;
+  height: 76px;
+  top: 72px;
+  left: 46%;
+  background: rgb(255 255 255 / 0.5);
+  filter: blur(2px);
+}
+
+.hillBack {
+  width: 120%;
+  height: 320px;
+  left: -10%;
+  bottom: -120px;
+  background: linear-gradient(180deg, #83c96f 0%, #5f9d53 100%);
+}
+
+.hillFront {
+  width: 115%;
+  height: 260px;
+  left: -6%;
+  bottom: -150px;
+  background: linear-gradient(180deg, #5da54f 0%, #427d3f 100%);
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+  max-width: 1440px;
+  margin: 0 auto;
   display: grid;
-  gap: 20px;
+  gap: 18px;
 }
 
-.header,
-.section {
-  border: 1px solid #d0d0d0;
-  padding: 16px;
+.topBar,
+.statusBanner,
+.playersRail,
+.boardShell,
+.controlCard {
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 18px 50px rgb(38 76 110 / 0.14),
+    inset 0 1px 0 rgb(255 255 255 / 0.55);
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: start;
+.topBar {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: 18px;
+  padding: 20px;
+  border-radius: 30px;
+  background: rgb(255 255 255 / 0.62);
+}
+
+.brandBlock,
+.calledDeck,
+.playersRail,
+.boardShell,
+.controlCard {
+  border: 1px solid rgb(255 255 255 / 0.45);
+}
+
+.brandBlock {
+  padding: 18px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.82), rgb(239 248 255 / 0.72));
+}
+
+.brandKicker,
+.panelEyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #58718d;
 }
 
 .title {
-  margin: 0 0 8px;
+  margin: 6px 0 12px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+  color: #19456d;
 }
 
-.latestLabel {
-  margin-bottom: 8px;
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.latestNumber {
-  margin: 0 0 16px;
-  font-size: 2rem;
+.metaPill,
+.latestCallBadge,
+.statChip,
+.playerBadge,
+.playerTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
   font-weight: 700;
 }
 
-.calledNumbers {
+.metaPill,
+.statChip {
+  background: rgb(233 244 255 / 0.95);
+  color: #1f507a;
+}
+
+.calledDeck {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgb(28 66 112 / 0.92), rgb(16 44 81 / 0.92));
+  color: #f8fbff;
+}
+
+.calledHeader,
+.boardHeader,
+.railHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.panelTitle {
+  margin: 4px 0 0;
+  font-size: 1.2rem;
+}
+
+.latestCallBadge {
+  background: rgb(255 255 255 / 0.16);
+  color: #fff8cb;
+}
+
+.ballRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding-left: 20px;
-  margin: 0;
+  gap: 12px;
+  align-items: center;
+}
+
+.emptyBalls {
+  min-height: 74px;
+  display: grid;
+  place-items: center;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.08);
+  color: rgb(255 255 255 / 0.78);
+}
+
+.numberBall {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  padding-top: 10px;
+  color: #fff;
+  box-shadow:
+    inset 0 -8px 16px rgb(0 0 0 / 0.15),
+    0 10px 20px rgb(6 22 46 / 0.28);
+}
+
+.latestBall {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow:
+    0 0 0 4px rgb(255 255 255 / 0.18),
+    inset 0 -8px 16px rgb(0 0 0 / 0.14),
+    0 14px 28px rgb(6 22 46 / 0.34);
+}
+
+.ballLetter {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.ballValue {
+  margin-top: -2px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ballB {
+  background: linear-gradient(180deg, #52b7ff 0%, #2f7bda 100%);
+}
+
+.ballI {
+  background: linear-gradient(180deg, #f16397 0%, #cc2f71 100%);
+}
+
+.ballN {
+  background: linear-gradient(180deg, #9f7dff 0%, #684ae1 100%);
+}
+
+.ballG {
+  background: linear-gradient(180deg, #4fd49f 0%, #22a06b 100%);
+}
+
+.ballO {
+  background: linear-gradient(180deg, #ffbd52 0%, #ec8c22 100%);
+}
+
+.statusBanner {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 22px;
+  border-radius: 24px;
+  background: rgb(255 255 255 / 0.7);
+}
+
+.bannerTitle {
+  margin: 6px 0 0;
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+}
+
+.bannerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: end;
+  color: #38506b;
+  font-weight: 700;
+}
+
+.gameLayout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 290px;
+  gap: 18px;
+  align-items: start;
+}
+
+.playersRail,
+.controlCard {
+  padding: 18px;
+  border-radius: 28px;
+  background: rgb(255 255 255 / 0.76);
+}
+
+.playerList {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  display: grid;
+  gap: 12px;
+}
+
+.playerCard {
+  padding: 14px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #f8fbff 0%, #e8f3ff 100%);
+  border: 1px solid #d8ebfb;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.75);
+}
+
+.playerCurrent {
+  border-color: #6caef0;
+  background: linear-gradient(180deg, #ffffff 0%, #dceeff 100%);
+}
+
+.playerNameRow,
+.playerTags,
+.feedRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.playerName {
+  font-weight: 800;
+  color: #1f3d5d;
+}
+
+.playerBadge {
+  background: #2a77d2;
+  color: #fff;
+}
+
+.playerTags {
+  margin-top: 10px;
+  justify-content: start;
+  flex-wrap: wrap;
+}
+
+.playerTag {
+  background: #eef5ff;
+  color: #315986;
+}
+
+.emptyText,
+.boardHint {
+  color: #5c7089;
+}
+
+.boardStage {
+  display: grid;
+}
+
+.boardShell {
+  padding: 22px;
+  border-radius: 34px;
+  background:
+    linear-gradient(180deg, #fbfdff 0%, #eef7ff 36%, #d4eeff 100%);
+}
+
+.boardStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: end;
+}
+
+.cardFrame {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, #2c6fd2 0%, #1c59b7 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    0 16px 32px rgb(33 78 135 / 0.22);
 }
 
 .card {
-  border-collapse: collapse;
-  margin-bottom: 16px;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 8px;
+  table-layout: fixed;
 }
 
 .cardHeader,
 .cell,
 .marked,
 .free {
-  width: 56px;
-  height: 56px;
+  width: 20%;
+  height: clamp(58px, 9vw, 86px);
   text-align: center;
-  border: 1px solid #999;
-  font-weight: 600;
+  border-radius: 18px;
+  font-weight: 800;
 }
 
 .cardHeader {
-  background: #f2f2f2;
+  color: #fff;
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  letter-spacing: 0.12em;
+  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.12);
+}
+
+.tabB {
+  background: linear-gradient(180deg, #59bfff 0%, #2f7fe2 100%);
+}
+
+.tabI {
+  background: linear-gradient(180deg, #ff72aa 0%, #d8347b 100%);
+}
+
+.tabN {
+  background: linear-gradient(180deg, #aa84ff 0%, #6d4fe7 100%);
+}
+
+.tabG {
+  background: linear-gradient(180deg, #50d9a3 0%, #1ea16d 100%);
+}
+
+.tabO {
+  background: linear-gradient(180deg, #ffc860 0%, #ee9528 100%);
+}
+
+.cell,
+.marked,
+.free {
+  font-size: clamp(1.1rem, 2.4vw, 1.65rem);
+  border: 2px solid rgb(255 255 255 / 0.72);
+}
+
+.cell {
+  background: linear-gradient(180deg, #ffffff 0%, #edf5ff 100%);
+  color: #24456a;
+  box-shadow: inset 0 -6px 0 rgb(202 223 247 / 0.85);
 }
 
 .marked {
-  background: #222;
-  color: #fff;
+  background: linear-gradient(180deg, #ffe074 0%, #ffb11c 100%);
+  color: #5c2d00;
+  box-shadow:
+    inset 0 -6px 0 rgb(225 136 16 / 0.45),
+    0 10px 20px rgb(232 164 44 / 0.22);
 }
 
 .free {
-  background: #111;
+  background: linear-gradient(180deg, #ff86c1 0%, #d84088 100%);
   color: #fff;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
+  font-size: clamp(0.82rem, 1.6vw, 1rem);
+  box-shadow:
+    inset 0 -6px 0 rgb(146 22 81 / 0.35),
+    0 10px 20px rgb(214 64 136 / 0.26);
+}
+
+.boardFooter {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.emptyBoard {
+  margin-top: 18px;
+  padding: 30px 24px;
+  border-radius: 24px;
+  background: rgb(255 255 255 / 0.72);
+  text-align: center;
+}
+
+.bingoButton,
+.primaryButton,
+.secondaryButton,
+.startButton {
+  min-height: 54px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 20px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    filter 120ms ease,
+    opacity 120ms ease;
+}
+
+.bingoButton:hover:not(:disabled),
+.primaryButton:hover:not(:disabled),
+.secondaryButton:hover:not(:disabled),
+.startButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.bingoButton:disabled,
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.startButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .bingoButton {
-  min-width: 120px;
-  padding: 10px 14px;
+  min-width: 160px;
+  background: linear-gradient(180deg, #ff7a87 0%, #d83f56 100%);
+  color: #fff;
+  box-shadow: 0 14px 24px rgb(216 63 86 / 0.26);
 }
 
-.controls {
+.controlDock {
+  display: grid;
+  gap: 18px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  font-weight: 700;
+  color: #3b5372;
+}
+
+.field input {
+  min-height: 48px;
+  border: 1px solid #d0deec;
+  border-radius: 16px;
+  padding: 0 14px;
+  background: rgb(255 255 255 / 0.9);
+  color: #22344c;
+  font-size: 1rem;
+}
+
+.field input:focus {
+  outline: 2px solid #80b7ff;
+  outline-offset: 2px;
+}
+
+.actionStack {
   display: grid;
   gap: 12px;
+  margin-top: 18px;
 }
 
-.controls label {
-  display: grid;
-  gap: 6px;
+.primaryButton {
+  background: linear-gradient(180deg, #58b6ff 0%, #2a7ae0 100%);
+  color: #fff;
 }
 
-.controls input {
-  padding: 8px;
+.secondaryButton {
+  background: linear-gradient(180deg, #ffffff 0%, #e9f1ff 100%);
+  color: #25517f;
+  border: 1px solid #cfe2f5;
 }
 
-.controls button {
-  width: fit-content;
-  padding: 10px 14px;
+.startButton {
+  background: linear-gradient(180deg, #63d88c 0%, #2fa95b 100%);
+  color: #fff;
 }
 
-.players {
-  margin: 0;
-  padding-left: 20px;
+.feedRow {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #eef5ff 100%);
+  color: #2d4564;
 }
 
-@media (max-width: 640px) {
+.feedLabel {
+  font-weight: 800;
+}
+
+@media (max-width: 1180px) {
+  .gameLayout {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .controlDock {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
   .page {
     padding: 16px;
   }
 
-  .header {
+  .topBar,
+  .statusBanner,
+  .gameLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .statusBanner,
+  .boardFooter,
+  .calledHeader,
+  .boardHeader,
+  .railHeader {
+    align-items: start;
     flex-direction: column;
+  }
+
+  .bannerMeta,
+  .boardStats {
+    justify-content: start;
+  }
+
+  .playersRail {
+    order: 2;
+  }
+
+  .controlDock {
+    grid-template-columns: 1fr;
+    order: 3;
+  }
+}
+
+@media (max-width: 560px) {
+  .numberBall {
+    width: 64px;
+    height: 64px;
+  }
+
+  .card {
+    border-spacing: 6px;
   }
 
   .cardHeader,
   .cell,
   .marked,
   .free {
-    width: 48px;
-    height: 48px;
+    height: 58px;
+    border-radius: 14px;
   }
 }
