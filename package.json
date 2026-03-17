@@ -1,7 +1,7 @@
 {
   "name": "bingooo",
   "description": "Real-time multiplayer bingo with Next.js and Socket.IO",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "engines": {
     "node": ">=20.9.0 <23"
