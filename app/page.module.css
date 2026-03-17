@@ -881,35 +881,56 @@
   }
 
   .boardShell {
-    padding: 18px 12px 16px;
+    padding: 16px 10px 14px;
   }
 
   .boardWell {
-    padding: 8px;
+    padding: 6px;
   }
 
   .cardFrame {
-    padding: 8px;
+    width: 100%;
+    padding: 8px 6px;
+    overflow-x: hidden;
   }
 
   .card {
-    --tile-size: clamp(40px, calc((100vw - 128px) / 5), 48px);
-    border-spacing: 4px;
+    width: 100%;
+    table-layout: fixed;
+    border-spacing: 3px;
   }
 
   .cardHeader,
   .cell,
   .marked,
   .free {
-    border-radius: 14px;
+    width: auto;
+    min-width: 0;
+    height: clamp(42px, 12vw, 52px);
+    border-radius: 12px;
+  }
+
+  .headerChip {
+    font-size: clamp(0.82rem, 3.8vw, 1rem);
+    letter-spacing: 0.1em;
+  }
+
+  .cell,
+  .marked,
+  .free {
+    font-size: clamp(0.92rem, 4vw, 1.1rem);
   }
 
   .tileFace,
   .freeBadge {
-    width: calc(100% - 8px);
-    height: calc(100% - 8px);
-    margin: 4px;
-    border-radius: 12px;
+    width: calc(100% - 6px);
+    height: calc(100% - 6px);
+    margin: 3px;
+    border-radius: 10px;
+  }
+
+  .freeBadge {
+    font-size: clamp(1.15rem, 5vw, 1.55rem);
   }
 
   .boardHeader {
