@@ -56,6 +56,7 @@ const ROOM_IDS = [
   "Yankee",
   "Zulu",
 ] as const;
+const MAX_PLAYERS_PER_ROOM = 8;
 
 type RoomRecord = {
   state: RoomState;
@@ -388,6 +389,12 @@ function joinRoom(
   if (room.state.gameStatus !== "WAITING") {
     return socket.emit("room_error", {
       message: "Cannot join a game that has already started.",
+      roomId,
+    });
+  }
+  if (room.state.players.length >= MAX_PLAYERS_PER_ROOM) {
+    return socket.emit("room_error", {
+      message: `Room is full. Maximum ${MAX_PLAYERS_PER_ROOM} players allowed.`,
       roomId,
     });
   }
