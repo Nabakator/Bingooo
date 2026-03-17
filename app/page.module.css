@@ -1,0 +1,120 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  gap: 20px;
+}
+
+.header,
+.section {
+  border: 1px solid #d0d0d0;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.title {
+  margin: 0 0 8px;
+}
+
+.latestLabel {
+  margin-bottom: 8px;
+}
+
+.latestNumber {
+  margin: 0 0 16px;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.calledNumbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.card {
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.cardHeader,
+.cell,
+.marked,
+.free {
+  width: 56px;
+  height: 56px;
+  text-align: center;
+  border: 1px solid #999;
+  font-weight: 600;
+}
+
+.cardHeader {
+  background: #f2f2f2;
+}
+
+.marked {
+  background: #222;
+  color: #fff;
+}
+
+.free {
+  background: #111;
+  color: #fff;
+  letter-spacing: 0.08em;
+}
+
+.bingoButton {
+  min-width: 120px;
+  padding: 10px 14px;
+}
+
+.controls {
+  display: grid;
+  gap: 12px;
+}
+
+.controls label {
+  display: grid;
+  gap: 6px;
+}
+
+.controls input {
+  padding: 8px;
+}
+
+.controls button {
+  width: fit-content;
+  padding: 10px 14px;
+}
+
+.players {
+  margin: 0;
+  padding-left: 20px;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+  }
+
+  .cardHeader,
+  .cell,
+  .marked,
+  .free {
+    width: 48px;
+    height: 48px;
+  }
+}
