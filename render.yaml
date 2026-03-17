@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: bingooo
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.0

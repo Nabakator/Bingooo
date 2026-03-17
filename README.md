@@ -53,6 +53,17 @@ Copy `.env.example` to `.env.local` or `.env` if you want to override defaults.
 | `DRAW_INTERVAL_MS` | `5000` | Time between automatic number draws |
 | `DISCONNECT_GRACE_MS` | `15000` | Reconnect grace window before a player is removed |
 
+## Deploying on Render
+
+- Service type: `Web Service`
+- Runtime: `Node`
+- Build command: `npm install && npm run build`
+- Start command: `npm run start`
+- Health check path: `/health`
+- Node version: pinned in `.node-version` and `render.yaml`
+
+If you use Render Blueprints, the included `render.yaml` is enough to create the service.
+
 ## Notes
 
 - The server is authoritative for rooms, cards, draws, and bingo validation.
