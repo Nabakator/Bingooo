@@ -357,13 +357,33 @@
 
 .boardStage {
   display: grid;
+  justify-items: center;
 }
 
 .boardShell {
-  padding: 22px;
-  border-radius: 34px;
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  padding: 24px 24px 22px;
+  border-radius: 40px;
+  border: 1px solid rgb(255 255 255 / 0.45);
   background:
-    linear-gradient(180deg, #fbfdff 0%, #eef7ff 36%, #d4eeff 100%);
+    linear-gradient(180deg, #f8fcff 0%, #e9f5ff 28%, #bfe2ff 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.68),
+    inset 0 -16px 28px rgb(74 132 203 / 0.16),
+    0 24px 42px rgb(27 73 129 / 0.2);
+  overflow: hidden;
+}
+
+.boardTrim {
+  position: absolute;
+  inset: 12px 18px auto;
+  height: 14px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 0), rgb(255 255 255 / 0.52), rgb(255 255 255 / 0));
+  opacity: 0.78;
 }
 
 .boardStats {
@@ -373,26 +393,40 @@
   justify-content: end;
 }
 
+.boardWell {
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: 30px;
+  border: 1px solid rgb(255 255 255 / 0.35);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.38), rgb(180 219 255 / 0.16));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.65),
+    inset 0 -12px 20px rgb(34 97 171 / 0.12);
+}
+
 .cardFrame {
   width: fit-content;
   max-width: 100%;
-  margin: 18px auto 0;
-  padding: 16px;
-  border-radius: 28px;
+  margin: 0 auto;
+  padding: 20px;
+  border-radius: 34px;
+  border: 1px solid rgb(255 255 255 / 0.22);
   overflow-x: auto;
   background:
-    linear-gradient(180deg, #2c6fd2 0%, #1c59b7 100%);
+    linear-gradient(180deg, #3278dd 0%, #205fbf 52%, #184d9e 100%);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.3),
-    0 16px 32px rgb(33 78 135 / 0.22);
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    inset 0 -18px 26px rgb(7 32 84 / 0.28),
+    0 18px 34px rgb(19 56 106 / 0.28);
 }
 
 .card {
-  --tile-size: clamp(44px, 7vw, 86px);
+  --tile-size: clamp(50px, 7.6vw, 92px);
   width: fit-content;
   margin: 0 auto;
   border-collapse: separate;
-  border-spacing: 8px;
+  border-spacing: 10px;
 }
 
 .cardHeader,
@@ -402,16 +436,33 @@
   width: var(--tile-size);
   min-width: var(--tile-size);
   height: var(--tile-size);
+  padding: 0;
   text-align: center;
-  border-radius: 18px;
+  border-radius: 22px;
   font-weight: 800;
+  position: relative;
+  overflow: hidden;
 }
 
 .cardHeader {
+  padding: 6px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    inset 0 -5px 0 rgb(0 0 0 / 0.14),
+    0 8px 14px rgb(11 33 78 / 0.16);
+}
+
+.headerChip {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
   color: #fff;
   font-size: clamp(1rem, 2vw, 1.4rem);
-  letter-spacing: 0.12em;
-  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.12);
+  letter-spacing: 0.16em;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.16);
+  background: rgb(255 255 255 / 0.12);
 }
 
 .tabB {
@@ -438,46 +489,113 @@
 .marked,
 .free {
   font-size: clamp(1.1rem, 2.4vw, 1.65rem);
-  border: 2px solid rgb(255 255 255 / 0.72);
+  border: 0;
+  transition:
+    transform 120ms ease,
+    filter 120ms ease;
+}
+
+.tileFace,
+.freeBadge {
+  display: grid;
+  place-items: center;
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
+  margin: 6px;
+  border-radius: 18px;
+  transition:
+    transform 120ms ease,
+    filter 120ms ease;
 }
 
 .cell {
-  background: linear-gradient(180deg, #ffffff 0%, #edf5ff 100%);
+  background:
+    linear-gradient(180deg, rgb(24 66 134 / 0.92), rgb(15 42 93 / 0.98));
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.08),
+    inset 0 12px 18px rgb(0 0 0 / 0.12),
+    inset 0 -10px 18px rgb(6 24 63 / 0.52);
+}
+
+.cell .tileFace {
+  background: linear-gradient(180deg, #ffffff 0%, #eef5ff 100%);
   color: #24456a;
-  box-shadow: inset 0 -6px 0 rgb(202 223 247 / 0.85);
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.96),
+    inset 0 -8px 14px rgb(191 213 240 / 0.92);
 }
 
 .marked {
-  background: linear-gradient(180deg, #ffe074 0%, #ffb11c 100%);
-  color: #5c2d00;
+  background: linear-gradient(180deg, #2f65c0 0%, #1a4288 100%);
   box-shadow:
-    inset 0 -6px 0 rgb(225 136 16 / 0.45),
-    0 10px 20px rgb(232 164 44 / 0.22);
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    inset 0 -10px 18px rgb(8 24 59 / 0.36);
+}
+
+.marked .tileFace {
+  background:
+    radial-gradient(circle at 30% 28%, #fff7c9 0%, #ffe381 30%, #ffbf34 68%, #e28418 100%);
+  color: #643103;
+  box-shadow:
+    inset 0 3px 0 rgb(255 255 255 / 0.52),
+    inset 0 -10px 14px rgb(169 90 8 / 0.34),
+    0 8px 18px rgb(255 185 33 / 0.26);
+  transform: translateY(-1px);
 }
 
 .free {
-  background: linear-gradient(180deg, #ffe074 0%, #ffb11c 100%);
-  color: #5c2d00;
-  letter-spacing: 0.12em;
-  font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+  background:
+    linear-gradient(180deg, #ff90c8 0%, #d84389 58%, #b52669 100%);
   box-shadow:
-    inset 0 -6px 0 rgb(225 136 16 / 0.45),
-    0 10px 20px rgb(232 164 44 / 0.22);
+    inset 0 2px 0 rgb(255 255 255 / 0.24),
+    inset 0 -10px 16px rgb(104 12 56 / 0.32),
+    0 10px 20px rgb(185 39 107 / 0.2);
+}
+
+.freeBadge {
+  border-radius: 50%;
+  color: #8b3300;
+  font-size: clamp(1.65rem, 3vw, 2.3rem);
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.44);
+  background:
+    radial-gradient(circle at 30% 28%, #fff8d8 0%, #ffe487 28%, #ffbf2e 62%, #de7320 100%);
+  box-shadow:
+    inset 0 4px 0 rgb(255 255 255 / 0.58),
+    inset 0 -10px 12px rgb(176 84 8 / 0.34),
+    0 0 0 4px rgb(255 255 255 / 0.2),
+    0 10px 18px rgb(255 171 41 / 0.28);
 }
 
 .boardFooter {
   margin-top: 18px;
+}
+
+.boardFooterPlate {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 18px;
   align-items: center;
+  padding: 18px 20px;
+  border-radius: 28px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  background:
+    linear-gradient(180deg, rgb(20 67 138 / 0.98), rgb(11 38 83 / 0.98));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.24),
+    inset 0 -12px 18px rgb(4 21 55 / 0.36),
+    0 18px 30px rgb(18 47 95 / 0.24);
 }
 
 .emptyBoard {
-  margin-top: 18px;
-  padding: 30px 24px;
-  border-radius: 24px;
-  background: rgb(255 255 255 / 0.72);
+  margin-top: 22px;
+  padding: 36px 28px;
+  border-radius: 30px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.82), rgb(230 242 255 / 0.7));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.68),
+    inset 0 -10px 16px rgb(89 140 204 / 0.08);
   text-align: center;
 }
 
@@ -516,10 +634,25 @@
 }
 
 .bingoButton {
-  min-width: 160px;
-  background: linear-gradient(180deg, #ff7a87 0%, #d83f56 100%);
+  min-width: 190px;
+  min-height: 62px;
+  padding: 0 30px;
+  border-radius: 22px;
+  letter-spacing: 0.14em;
+  background: linear-gradient(180deg, #ff7f92 0%, #d94261 58%, #b82f4a 100%);
   color: #fff;
-  box-shadow: 0 14px 24px rgb(216 63 86 / 0.26);
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.34),
+    inset 0 -10px 14px rgb(123 15 37 / 0.32),
+    0 16px 26px rgb(184 47 74 / 0.28);
+}
+
+.boardHint {
+  max-width: 360px;
+  margin: 0;
+  color: rgb(233 243 255 / 0.88);
+  font-weight: 700;
+  line-height: 1.5;
 }
 
 .controlDock {
@@ -608,6 +741,7 @@
 
   .statusBanner,
   .boardFooter,
+  .boardFooterPlate,
   .calledHeader,
   .boardHeader,
   .railHeader {
@@ -636,9 +770,21 @@
     height: 64px;
   }
 
+  .boardShell {
+    padding: 20px 16px 18px;
+  }
+
+  .boardWell {
+    padding: 12px;
+  }
+
+  .cardFrame {
+    padding: 14px;
+  }
+
   .card {
     --tile-size: 48px;
-    border-spacing: 6px;
+    border-spacing: 8px;
   }
 
   .cardHeader,
@@ -646,5 +792,22 @@
   .marked,
   .free {
     border-radius: 14px;
+  }
+
+  .tileFace,
+  .freeBadge {
+    width: calc(100% - 8px);
+    height: calc(100% - 8px);
+    margin: 4px;
+    border-radius: 12px;
+  }
+
+  .boardFooterPlate {
+    padding: 16px;
+  }
+
+  .bingoButton {
+    width: 100%;
+    min-width: 0;
   }
 }

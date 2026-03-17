@@ -282,6 +282,7 @@ export default function HomePage() {
 
           <section className={styles.boardStage}>
             <div className={styles.boardShell}>
+              <div className={styles.boardTrim} aria-hidden="true" />
               <div className={styles.boardHeader}>
                 <div>
                   <p className={styles.panelEyebrow}>Your board</p>
@@ -298,42 +299,50 @@ export default function HomePage() {
               </div>
 
               {currentPlayer ? (
-                <div className={styles.cardFrame}>
-                  <table className={styles.card} aria-label="Bingo card">
-                    <thead>
-                      <tr>
-                        {CARD_LABELS.map((label) => (
-                          <th
-                            key={label}
-                            className={`${styles.cardHeader} ${TAB_CLASS_BY_LABEL[label]}`}
-                            scope="col"
-                          >
-                            {label}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentPlayer.card.map((row, rowIndex) => (
-                        <tr key={rowIndex}>
-                          {row.map((value) => (
-                            <td
-                              key={`${rowIndex}-${String(value)}`}
-                              className={
-                                value === FREE_SPACE
-                                  ? styles.free
-                                  : calledSet.has(value)
-                                    ? styles.marked
-                                    : styles.cell
-                              }
+                <div className={styles.boardWell}>
+                  <div className={styles.cardFrame}>
+                    <table className={styles.card} aria-label="Bingo card">
+                      <thead>
+                        <tr>
+                          {CARD_LABELS.map((label) => (
+                            <th
+                              key={label}
+                              className={`${styles.cardHeader} ${TAB_CLASS_BY_LABEL[label]}`}
+                              scope="col"
                             >
-                              {value === FREE_SPACE ? "★" : value}
-                            </td>
+                              <span className={styles.headerChip}>{label}</span>
+                            </th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {currentPlayer.card.map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {row.map((value) => {
+                              const isFree = value === FREE_SPACE;
+                              const tileClassName = isFree
+                                ? styles.free
+                                : calledSet.has(value)
+                                  ? styles.marked
+                                  : styles.cell;
+
+                              return (
+                                <td key={`${rowIndex}-${String(value)}`} className={tileClassName}>
+                                  <span
+                                    className={
+                                      isFree ? styles.freeBadge : styles.tileFace
+                                    }
+                                  >
+                                    {isFree ? "★" : value}
+                                  </span>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               ) : (
                 <div className={styles.emptyBoard}>
@@ -343,17 +352,19 @@ export default function HomePage() {
               )}
 
               <div className={styles.boardFooter}>
-                <button
-                  className={styles.bingoButton}
-                  type="button"
-                  disabled={!canClaimBingo}
-                  onClick={claimBingo}
-                >
-                  BINGO
-                </button>
-                <p className={styles.boardHint}>
-                  The free centre stays marked. Number tiles light up automatically as calls arrive.
-                </p>
+                <div className={styles.boardFooterPlate}>
+                  <button
+                    className={styles.bingoButton}
+                    type="button"
+                    disabled={!canClaimBingo}
+                    onClick={claimBingo}
+                  >
+                    BINGO
+                  </button>
+                  <p className={styles.boardHint}>
+                    The free centre stays marked. Number tiles light up automatically as calls arrive.
+                  </p>
+                </div>
               </div>
             </div>
           </section>
