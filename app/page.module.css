@@ -881,20 +881,20 @@
   }
 
   .boardShell {
-    padding: 20px 16px 18px;
+    padding: 18px 12px 16px;
   }
 
   .boardWell {
-    padding: 12px;
+    padding: 8px;
   }
 
   .cardFrame {
-    padding: 14px;
+    padding: 8px;
   }
 
   .card {
-    --tile-size: 48px;
-    border-spacing: 8px;
+    --tile-size: clamp(40px, calc((100vw - 128px) / 5), 48px);
+    border-spacing: 4px;
   }
 
   .cardHeader,
@@ -910,6 +910,10 @@
     height: calc(100% - 8px);
     margin: 4px;
     border-radius: 12px;
+  }
+
+  .boardHeader {
+    gap: 10px;
   }
 
   .boardFooterPlate {
