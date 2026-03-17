@@ -817,7 +817,7 @@
   font-weight: 800;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1350px) {
   .gameLayout {
     grid-template-columns: 220px minmax(0, 1fr);
   }
