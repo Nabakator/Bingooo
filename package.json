@@ -1,11 +1,15 @@
 {
   "name": "bingooo",
+  "description": "Real-time multiplayer bingo with Next.js and Socket.IO",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
-    "dev": "NODE_ENV=development tsx server.ts",
+    "dev": "node scripts/run-server.mjs development",
     "build": "next build",
-    "start": "NODE_ENV=production tsx server.ts",
+    "start": "node scripts/run-server.mjs production",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
